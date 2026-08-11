@@ -18,6 +18,7 @@ import { useApplications, useMoveApplication } from '@/hooks/use-applications';
 import { STAGES, type Application, type Stage } from '@/lib/applications';
 import { KanbanColumn } from './kanban-column';
 import { ApplicationCard } from './application-card';
+import { CardDetailSheet } from './card-detail-sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type Columns = Record<Stage, Application[]>;
@@ -56,6 +57,7 @@ export function KanbanBoard() {
   const [columns, setColumns] = useState<Columns>(() => group([]));
   const columnsRef = useRef<Columns>(columns);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const setCols = (updater: Columns | ((prev: Columns) => Columns)) =>
     setColumns((prev) => {
@@ -166,6 +168,7 @@ export function KanbanBoard() {
   }
 
   const activeCard = activeId ? findCard(columns, activeId) : null;
+  const selectedCard = selectedId ? findCard(columns, selectedId) : null;
 
   return (
     <DndContext
@@ -178,12 +181,22 @@ export function KanbanBoard() {
     >
       <div className="flex gap-3 overflow-x-auto pb-3">
         {STAGES.map((stage) => (
-          <KanbanColumn key={stage} stage={stage} items={columns[stage]} />
+          <KanbanColumn
+            key={stage}
+            stage={stage}
+            items={columns[stage]}
+            onOpen={(a) => setSelectedId(a.id)}
+          />
         ))}
       </div>
       <DragOverlay>
         {activeCard ? <ApplicationCard application={activeCard} overlay /> : null}
       </DragOverlay>
+      <CardDetailSheet
+        application={selectedCard}
+        open={!!selectedId}
+        onOpenChange={(o) => !o && setSelectedId(null)}
+      />
     </DndContext>
   );
 }

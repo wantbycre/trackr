@@ -13,9 +13,10 @@ import { cn } from '@/lib/utils';
 interface Props {
   stage: Stage;
   items: Application[];
+  onOpen?: (application: Application) => void;
 }
 
-export function KanbanColumn({ stage, items }: Props) {
+export function KanbanColumn({ stage, items, onOpen }: Props) {
   // 빈 컬럼에도 드롭할 수 있도록 컬럼 자체를 droppable로 등록
   const { setNodeRef, isOver } = useDroppable({ id: `col:${stage}` });
 
@@ -41,7 +42,9 @@ export function KanbanColumn({ stage, items }: Props) {
               비어 있음
             </div>
           ) : (
-            items.map((a) => <ApplicationCard key={a.id} application={a} />)
+            items.map((a) => (
+              <ApplicationCard key={a.id} application={a} onOpen={onOpen} />
+            ))
           )}
         </div>
       </SortableContext>

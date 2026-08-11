@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/client';
 import { keys } from '@/lib/query/keys';
-import type { Application, Stage } from '@/lib/applications';
+import type { Application, ApplicationEvent, Stage } from '@/lib/applications';
 
 /** 전체 지원 목록 (position_order 오름차순) */
 export function useApplications() {
@@ -59,6 +59,56 @@ export function useMoveApplication() {
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: keys.applications() });
+    },
+  });
+}
+
+/** 특정 지원의 활동 타임라인 (occurred_at 오름차순) */
+export function useApplicationEvents(applicationId: string | null) {
+  return useQuery({
+    queryKey: applicationId ? keys.events(applicationId) : ['events', 'none'],
+    enabled: !!applicationId,
+    queryFn: async (): Promise<ApplicationEvent[]> => {
+      const { data, error } = await supabase
+        .from('application_events')
+        .select('*')
+        .eq('application_id', applicationId!)
+        .order('occurred_at', { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as ApplicationEvent[];
+    },
+  });
+}
+
+export interface UpdatePayload {
+  id: string;
+  patch: Partial<
+    Pick<
+      Application,
+      | 'platform'
+      | 'company_name'
+      | 'position'
+      | 'stage'
+      | 'round'
+      | 'result'
+      | 'applied_at'
+      | 'job_url'
+      | 'notes'
+    >
+  >;
+}
+
+/** 카드 상세 편집 저장. stage 변경 시 DB 트리거가 application_events에 자동 기록. */
+export function useUpdateApplication() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, patch }: UpdatePayload) => {
+      const { error } = await supabase.from('applications').update(patch).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: keys.applications() });
+      qc.invalidateQueries({ queryKey: keys.events(vars.id) });
     },
   });
 }

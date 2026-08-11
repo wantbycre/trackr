@@ -10,9 +10,10 @@ interface Props {
   application: Application;
   /** DragOverlay용 정적 렌더(리스너/트랜스폼 없이) */
   overlay?: boolean;
+  onOpen?: (application: Application) => void;
 }
 
-export function ApplicationCard({ application, overlay }: Props) {
+export function ApplicationCard({ application, overlay, onOpen }: Props) {
   const sortable = useSortable({ id: application.id });
   const {
     attributes,
@@ -35,6 +36,7 @@ export function ApplicationCard({ application, overlay }: Props) {
       }
       {...(overlay ? {} : attributes)}
       {...(overlay ? {} : listeners)}
+      onClick={overlay ? undefined : () => onOpen?.(application)}
       className={cn(
         'rounded-md border bg-background p-2.5 text-sm shadow-sm',
         'cursor-grab active:cursor-grabbing',

@@ -11,6 +11,16 @@ export type Stage =
 
 export type Result = 'pending' | 'rejected' | 'accepted';
 
+export interface ApplicationEvent {
+  id: string;
+  application_id: string;
+  type: string; // 'stage_change' | 'note' | ...
+  from_stage: Stage | null;
+  to_stage: Stage | null;
+  note: string | null;
+  occurred_at: string;
+}
+
 export interface Application {
   id: string;
   platform: string;
