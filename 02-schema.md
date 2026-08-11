@@ -1,6 +1,6 @@
 # 02 · DB 스키마 + 엑셀 130건 CSV 임포트
 
-_작성: 2026-08-11 · 상태: 진행 중_
+_작성: 2026-08-11 · 상태: ✅ 스키마+임포트 완료 (문서 동기화·보드 연동은 03단계)_
 
 ## 목표
 
@@ -112,8 +112,11 @@ end $$;
 create trigger applications_log_stage_change
   after update on applications for each row execute function log_stage_change();
 
--- MVP: 인증 없음 → RLS 비활성(기본). 단일 사용자 가정.
--- Phase 2에서 user_id 컬럼 + RLS 추가.
+-- MVP: 인증 없음 → RLS를 명시적으로 비활성 (anon 키로 읽기/쓰기 허용).
+-- ⚠️ 테이블을 Table Editor UI로 만들면 RLS가 기본 ON이라 반드시 꺼야 insert/select 됨.
+alter table applications        disable row level security;
+alter table application_events  disable row level security;
+-- Phase 2에서 user_id 컬럼 + RLS 활성 + '내 데이터만' 정책 추가.
 ```
 
 ## 임포트 방법 (두 갈래)
@@ -126,12 +129,12 @@ create trigger applications_log_stage_change
 
 ## 작업 체크리스트
 
-- [ ] Supabase 프로젝트 생성 + `.env.local` 채우기
-- [ ] 스키마 SQL 실행 (SQL Editor)
-- [ ] `seed/applications.csv` 작성 (사용자, 130행)
-- [ ] 임포트 스크립트 작성 + 실행
+- [x] Supabase 프로젝트 생성 + `.env.local` 채우기
+- [x] 스키마 SQL 실행 (SQL Editor) + RLS disable
+- [x] `seed/applications.csv` 작성 (146행)
+- [x] 임포트 스크립트 작성 + 실행 (146건 insert)
 - [ ] `00-overview.md`·`react.md` stage/result 모델로 갱신
-- [ ] `/board`에서 실데이터 렌더 확인
+- [ ] `/board`에서 실데이터 렌더 확인 → 03-kanban 단계에서
 
 ## 다음
 
