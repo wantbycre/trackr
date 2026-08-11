@@ -33,7 +33,7 @@ export function KanbanColumn({ stage, items, onOpen }: Props) {
         <div
           ref={setNodeRef}
           className={cn(
-            'flex min-h-24 flex-1 flex-col gap-2 p-2 transition-colors md:min-h-0 md:overflow-y-auto',
+            'flex min-h-24 max-h-56 flex-col gap-2 overflow-y-auto p-2 transition-colors md:max-h-none md:min-h-0 md:flex-1',
             isOver && 'bg-accent/50',
           )}
         >

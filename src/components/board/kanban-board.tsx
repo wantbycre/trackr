@@ -158,7 +158,7 @@ export function KanbanBoard() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-3 md:grid md:h-[calc(100dvh-12rem)] md:grid-cols-7">
+      <div className="flex flex-col gap-3 md:grid md:h-[calc(100dvh-8rem)] md:grid-cols-7 md:mx-[calc(50%-50vw)] md:px-4">
         {STAGES.map((s) => (
           <div
             key={s}
@@ -196,7 +196,7 @@ export function KanbanBoard() {
       onDragEnd={onDragEnd}
       onDragCancel={() => setActiveId(null)}
     >
-      <div className="flex flex-col gap-3 md:grid md:h-[calc(100dvh-12rem)] md:grid-cols-7 md:overflow-hidden">
+      <div className="flex flex-col gap-3 md:grid md:h-[calc(100dvh-8rem)] md:grid-cols-7 md:mx-[calc(50%-50vw)] md:px-4 md:overflow-hidden">
         {STAGES.map((stage) => (
           <KanbanColumn
             key={stage}
