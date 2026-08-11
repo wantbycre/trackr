@@ -61,9 +61,9 @@ export const STAGE_LABEL: Record<Stage, string> = {
 /** result → shadcn Badge variant + 라벨 */
 export const RESULT_META: Record<
   Result,
-  { label: string; variant: 'secondary' | 'destructive' | 'default' }
+  { label: string; variant: 'secondary' | 'destructive' | 'default' | 'success' }
 > = {
   pending: { label: '진행중', variant: 'default' },
   rejected: { label: '탈락', variant: 'destructive' },
-  accepted: { label: '합격', variant: 'secondary' },
+  accepted: { label: '합격', variant: 'success' },
 };
