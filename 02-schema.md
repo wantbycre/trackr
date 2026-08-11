@@ -21,31 +21,34 @@ _작성: 2026-08-11 · 상태: 진행 중_
 
 | 컬럼 | 필수 | 허용값 / 형식 | 설명 |
 |------|:---:|----------------|------|
+| 플랫폼 | ✅ | 예: `원티드` `사람인` `잡코리아` `링크드인` `직접지원` `지인추천` | 지원 경로 |
 | 회사이름 | ✅ | 자유 텍스트 | 이미 보유 |
-| 직무 |  | 자유 텍스트 | 예: 프론트엔드 (비우면 기본값) |
-| 도달단계 | ✅ | `관심` `지원` `서류` `코테` `면접` `최종` `오퍼` | 가장 멀리 간 단계 |
-| 면접차수 |  | `1` `2` `3` … | 도달단계=`면접`일 때만, 아니면 비움 |
-| 결과 | ✅ | `진행중` `탈락` `합격` | "몇 차 탈락"의 탈락 여부 |
+| 직무 | ✅ | 자유 텍스트 | 예: 프론트엔드 |
+| 도달단계 |  | `관심` `지원` `서류` `코테` `1차면접` `2차면접` `3차면접` `최종면접` `오퍼` | 가장 멀리 간 단계(차수 포함) |
+| 결과 |  | `진행중` `탈락` `합격` | 비우면 `진행중` |
 | 지원일 |  | `YYYY-MM-DD` | 모르면 비움 |
-| 직무링크 |  | URL | JD 링크 |
 | 메모 |  | 자유 텍스트 | 원본 "2차 탈락" 등 원문 보존용 |
 
+> 면접차수는 **도달단계 라벨(`2차면접`)에 포함**해 표기 → 임포트 시 DB `round`로 파싱. 별도 컬럼 불필요.
+
 **"몇 차 탈락" → 채우는 법 예시**
-| 원본 메모 | 도달단계 | 면접차수 | 결과 |
-|-----------|----------|:-------:|------|
-| 서류 탈락 | 서류 | | 탈락 |
-| 코테 탈락 | 코테 | | 탈락 |
-| 1차 탈락 | 면접 | 1 | 탈락 |
-| 2차 탈락 | 면접 | 2 | 탈락 |
-| 최종 탈락 | 최종 | | 탈락 |
-| 최종 합격 / 오퍼 | 오퍼 | | 합격 |
-| 결과 대기 | (도달한 단계) | | 진행중 |
+| 원본 메모 | 도달단계 | 결과 |
+|-----------|----------|------|
+| 서류 탈락 | 서류 | 탈락 |
+| 코테 탈락 | 코테 | 탈락 |
+| 1차 탈락 | 1차면접 | 탈락 |
+| 2차 탈락 | 2차면접 | 탈락 |
+| 최종 탈락 | 최종면접 | 탈락 |
+| 최종 합격 / 오퍼 | 오퍼 | 합격 |
+| 결과 대기 | (도달한 단계) | 진행중 |
 
 ## 라벨 → enum 매핑 (임포트 스크립트가 변환)
 ```
+플랫폼:    자유 텍스트 그대로 저장 (platform 컬럼)
 도달단계:  관심→wishlist  지원→applied  서류→document  코테→coding_test
-           면접→interview  최종→final    오퍼→offer
-결과:      진행중→pending  탈락→rejected  합격→accepted
+           1차면접→(interview, round=1)  2차면접→(interview, round=2)
+           3차면접→(interview, round=3)  최종면접→final  오퍼→offer
+결과:      진행중→pending  탈락→rejected  합격→accepted (비우면 pending)
 ```
 
 ## 스키마 SQL (MVP: 인증 없음 — user_id/RLS 없음)
@@ -57,19 +60,21 @@ create type application_result as enum ('pending','rejected','accepted');
 
 create table applications (
   id uuid primary key default gen_random_uuid(),
+  platform text not null,               -- 지원 경로 (원티드/사람인/직접지원 …)
   company_name text not null,
-  position text,
+  position text not null,
   stage application_stage not null default 'applied',
-  round smallint,                       -- 면접 차수 (stage=interview 일 때)
+  round smallint,                       -- 면접 차수 (stage=interview 일 때, 도달단계 라벨에서 파싱)
   result application_result not null default 'pending',
   applied_at date,
-  job_url text,
+  job_url text,                         -- JD 링크 (CSV엔 없음, 카드 상세에서 추후 입력)
   notes text,
   position_order double precision not null default 0,  -- 칸반 정렬
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
 create index applications_stage_idx on applications (stage);
+create index applications_platform_idx on applications (platform);
 
 -- 활동 타임라인 (stage 변경 자동 기록 → 퍼널/소요일 통계 원천)
 create table application_events (
