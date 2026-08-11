@@ -21,7 +21,7 @@ export function KanbanColumn({ stage, items, onOpen }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: `col:${stage}` });
 
   return (
-    <section className="flex w-64 shrink-0 flex-col rounded-lg border bg-card">
+    <section className="flex w-full flex-col rounded-lg border bg-card md:h-full md:min-h-0 md:w-auto md:min-w-0">
       <header className="flex items-center justify-between px-3 py-2">
         <span className="text-sm font-medium">{STAGE_LABEL[stage]}</span>
         <Badge variant="secondary">{items.length}</Badge>
@@ -33,7 +33,7 @@ export function KanbanColumn({ stage, items, onOpen }: Props) {
         <div
           ref={setNodeRef}
           className={cn(
-            'flex min-h-24 flex-1 flex-col gap-2 p-2 transition-colors',
+            'flex min-h-24 max-h-56 flex-col gap-2 overflow-y-auto p-2 transition-colors md:max-h-none md:min-h-0 md:flex-1',
             isOver && 'bg-accent/50',
           )}
         >

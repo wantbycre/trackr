@@ -73,6 +73,57 @@ export function useMoveApplication() {
   });
 }
 
+export interface CreatePayload {
+  platform: string;
+  company_name: string;
+  position: string;
+  stage?: Stage;
+  result?: import('@/lib/applications').Result;
+  applied_at?: string | null;
+  notes?: string | null;
+}
+
+/** 새 지원 추가. live에선 user_id가 컬럼 기본값(auth.uid())으로 자동 세팅. */
+export function useCreateApplication() {
+  const qc = useQueryClient();
+  const mode = useDataMode();
+  return useMutation({
+    mutationFn: async (input: CreatePayload) => {
+      if (mode === 'demo') {
+        demoStore.create(input);
+        return;
+      }
+      const { error } = await supabase.from('applications').insert({
+        ...input,
+        position_order: Date.now(),
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [...keys.applications(), mode] });
+    },
+  });
+}
+
+/** 지원 삭제(카드 제거). */
+export function useDeleteApplication() {
+  const qc = useQueryClient();
+  const mode = useDataMode();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (mode === 'demo') {
+        demoStore.remove(id);
+        return;
+      }
+      const { error } = await supabase.from('applications').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [...keys.applications(), mode] });
+    },
+  });
+}
+
 /** 특정 지원의 활동 타임라인 (occurred_at 오름차순) */
 export function useApplicationEvents(applicationId: string | null) {
   const mode = useDataMode();

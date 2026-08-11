@@ -1,13 +1,17 @@
 import { KanbanBoard } from "@/components/board/kanban-board";
+import { AddApplicationDialog } from "@/components/board/add-application-dialog";
 
 export default function BoardPage() {
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight">칸반 보드</h1>
-        <p className="text-sm text-muted-foreground">
-          지원 현황을 단계별로 관리합니다. 카드를 드래그해 단계를 옮기세요.
-        </p>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">칸반 보드</h1>
+          <p className="text-sm text-muted-foreground">
+            지원 현황을 단계별로 관리합니다. 카드를 드래그해 단계를 옮기세요.
+          </p>
+        </div>
+        <AddApplicationDialog />
       </div>
       <KanbanBoard />
     </div>
