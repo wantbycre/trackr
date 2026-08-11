@@ -188,3 +188,6 @@ next-env.d.ts
 # Trackr overrides
 !.env.example
 .kiro/
+
+# 실제 지원 데이터(개인정보) — 템플릿만 커밋
+seed/applications.csv
