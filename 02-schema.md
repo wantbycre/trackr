@@ -1,0 +1,141 @@
+# 02 · DB 스키마 + 엑셀 130건 CSV 임포트
+
+_작성: 2026-08-11 · 상태: ✅ 스키마+임포트 완료 (문서 동기화·보드 연동은 03단계)_
+
+## 목표
+
+실제 지원 이력(회사이름 + "몇 차 탈락")을 담을 스키마를 확정하고, 사람이 채우기 쉬운 CSV 템플릿 → Supabase 임포트까지 연결한다.
+
+## 핵심 설계 결정 (실데이터 반영)
+
+원본 데이터는 대부분 **"어느 단계에서 탈락"**. "탈락"을 칸반 컬럼으로 두면 130장이 한 컬럼에 몰려 보드가 무의미해진다. 그래서:
+
+- **stage (도달 단계)** = 그 회사에서 도달한 **가장 먼 단계**
+- **result (결과)** = `pending`(진행중) / `rejected`(탈락) / `accepted`(합격)
+- **round (면접 차수)** = 면접일 때만 1·2·3 …
+
+칸반 컬럼 = stage, 카드 색/배지 = result. → 자연스러운 퍼널 모양 + 대시보드 전환율/탈락률이 실제 의미를 가짐.
+
+> 이 결정으로 `00-overview.md`·`react.md`의 "탈락=컬럼" 서술은 "stage=컬럼, result=배지"로 갱신 필요(이 브랜치에서 함께 반영).
+
+## CSV 템플릿 (사람이 채우는 형식)
+
+파일: `seed/applications.template.csv` — 이 **한 파일**에 채운다. 실데이터가 들어가므로 `seed/*.csv` gitignore로 **로컬 전용**(공개 레포엔 미포함). 포맷은 아래 표 참조.
+
+| 컬럼     | 필수 | 허용값 / 형식                                                                      | 설명                           |
+| -------- | :--: | ---------------------------------------------------------------------------------- | ------------------------------ |
+| 플랫폼   |  ✅  | 예: `원티드` `사람인` `잡코리아` `링크드인` `직접지원` `지인추천`                  | 지원 경로                      |
+| 회사이름 |  ✅  | 자유 텍스트                                                                        | 이미 보유                      |
+| 직무     |  ✅  | 자유 텍스트                                                                        | 예: 프론트엔드                 |
+| 도달단계 |      | `관심` `지원` `서류` `코테` `과제` `1차면접` `2차면접` `3차면접` `최종면접` `오퍼` | 가장 멀리 간 단계(차수 포함)   |
+| 결과     |      | `진행중` `탈락` `합격`                                                             | 비우면 `진행중`                |
+| 지원일   |      | `YYYY-MM-DD`                                                                       | 모르면 비움                    |
+| 메모     |      | 자유 텍스트                                                                        | 원본 "2차 탈락" 등 원문 보존용 |
+
+> 면접차수는 **도달단계 라벨(`2차면접`)에 포함**해 표기 → 임포트 시 DB `round`로 파싱. 별도 컬럼 불필요.
+
+**"몇 차 탈락" → 채우는 법 예시**
+| 원본 메모 | 도달단계 | 결과 |
+|-----------|----------|------|
+| 서류 탈락 | 서류 | 탈락 |
+| 코테 탈락 | 코테 | 탈락 |
+| 1차 탈락 | 1차면접 | 탈락 |
+| 2차 탈락 | 2차면접 | 탈락 |
+| 최종 탈락 | 최종면접 | 탈락 |
+| 최종 합격 / 오퍼 | 오퍼 | 합격 |
+| 결과 대기 | (도달한 단계) | 진행중 |
+
+## 라벨 → enum 매핑 (임포트 스크립트가 변환)
+
+```
+플랫폼:    자유 텍스트 그대로 저장 (platform 컬럼)
+도달단계:  관심→wishlist  지원→applied  서류→document  코테→coding_test
+           1차면접→(interview, round=1)  2차면접→(interview, round=2)
+           3차면접→(interview, round=3)  최종면접→final  오퍼→offer
+결과:      진행중→pending  탈락→rejected  합격→accepted (비우면 pending)
+```
+
+## 스키마 SQL (MVP: 인증 없음 — user_id/RLS 없음)
+
+```sql
+-- 단계(파이프라인 위치) / 결과
+create type application_stage as enum
+  ('wishlist','applied','document','coding_test','interview','final','offer');
+create type application_result as enum ('pending','rejected','accepted');
+
+create table applications (
+  id uuid primary key default gen_random_uuid(),
+  platform text not null,               -- 지원 경로 (원티드/사람인/직접지원 …)
+  company_name text not null,
+  position text not null,
+  stage application_stage not null default 'applied',
+  round smallint,                       -- 면접 차수 (stage=interview 일 때, 도달단계 라벨에서 파싱)
+  result application_result not null default 'pending',
+  applied_at date,
+  job_url text,                         -- JD 링크 (CSV엔 없음, 카드 상세에서 추후 입력)
+  notes text,
+  position_order double precision not null default 0,  -- 칸반 정렬
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+create index applications_stage_idx on applications (stage);
+create index applications_platform_idx on applications (platform);
+
+-- 활동 타임라인 (stage 변경 자동 기록 → 퍼널/소요일 통계 원천)
+create table application_events (
+  id uuid primary key default gen_random_uuid(),
+  application_id uuid not null references applications on delete cascade,
+  type text not null,                   -- 'stage_change' | 'note' | ...
+  from_stage application_stage,
+  to_stage application_stage,
+  note text,
+  occurred_at timestamptz default now()
+);
+
+-- updated_at 자동 갱신
+create or replace function set_updated_at()
+returns trigger language plpgsql as $$
+begin new.updated_at = now(); return new; end $$;
+create trigger applications_set_updated_at
+  before update on applications for each row execute function set_updated_at();
+
+-- stage 변경 자동 기록
+create or replace function log_stage_change()
+returns trigger language plpgsql as $$
+begin
+  if new.stage is distinct from old.stage then
+    insert into application_events (application_id, type, from_stage, to_stage)
+    values (new.id, 'stage_change', old.stage, new.stage);
+  end if;
+  return new;
+end $$;
+create trigger applications_log_stage_change
+  after update on applications for each row execute function log_stage_change();
+
+-- MVP: 인증 없음 → RLS를 명시적으로 비활성 (anon 키로 읽기/쓰기 허용).
+-- ⚠️ 테이블을 Table Editor UI로 만들면 RLS가 기본 ON이라 반드시 꺼야 insert/select 됨.
+alter table applications        disable row level security;
+alter table application_events  disable row level security;
+-- Phase 2에서 user_id 컬럼 + RLS 활성 + '내 데이터만' 정책 추가.
+```
+
+## 임포트 방법 (두 갈래)
+
+1. **Supabase 대시보드 Table Editor → Import CSV** (가장 간단): `seed/applications.template.csv` 업로드.
+   단, 한글 라벨→enum 변환이 안 되므로, 업로드 전 CSV를 enum 값으로 변환하거나 아래 스크립트 사용.
+2. **Node 임포트 스크립트** (`scripts/import.ts`, 추천): CSV 파싱 + 라벨→enum 매핑 + `applications` insert.
+   - `applied_at` 오름차순으로 `position_order` 부여.
+   - 실행: `NEXT_PUBLIC_SUPABASE_URL/ANON_KEY` 세팅 후 `npx tsx scripts/import.ts`.
+
+## 작업 체크리스트
+
+- [x] Supabase 프로젝트 생성 + `.env.local` 채우기
+- [x] 스키마 SQL 실행 (SQL Editor) + RLS disable
+- [x] `seed/applications.template.csv` 작성 (146행, 로컬 전용)
+- [x] 임포트 스크립트 작성 + 실행 (146건 insert)
+- [ ] `00-overview.md`·`react.md` stage/result 모델로 갱신
+- [ ] `/board`에서 실데이터 렌더 확인 → 03-kanban 단계에서
+
+## 다음
+
+- `03-kanban.md`: dnd-kit 칸반 + 낙관적 업데이트 (실데이터 기반)
