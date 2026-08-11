@@ -5,6 +5,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/sonner";
 import { ModeToggle } from "@/components/mode-toggle";
+import { DemoBadge } from "@/components/demo-badge";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,7 +44,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                   대시보드
                 </Link>
               </nav>
-              <div className="ml-auto">
+              <div className="ml-auto flex items-center gap-2">
+                <DemoBadge />
                 <ModeToggle />
               </div>
             </div>
