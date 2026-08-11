@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -12,19 +12,21 @@ import {
   type DragEndEvent,
   type DragOverEvent,
   type DragStartEvent,
-} from '@dnd-kit/core';
-import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { useApplications, useMoveApplication } from '@/hooks/use-applications';
-import { STAGES, type Application, type Stage } from '@/lib/applications';
-import { KanbanColumn } from './kanban-column';
-import { ApplicationCard } from './application-card';
-import { CardDetailSheet } from './card-detail-sheet';
-import { Skeleton } from '@/components/ui/skeleton';
+} from "@dnd-kit/core";
+import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { useApplications, useMoveApplication } from "@/hooks/use-applications";
+import { STAGES, type Application, type Stage } from "@/lib/applications";
+import { KanbanColumn } from "./kanban-column";
+import { ApplicationCard } from "./application-card";
+import { CardDetailSheet } from "./card-detail-sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Columns = Record<Stage, Application[]>;
 
 function group(apps: Application[]): Columns {
-  const cols = Object.fromEntries(STAGES.map((s) => [s, [] as Application[]])) as Columns;
+  const cols = Object.fromEntries(
+    STAGES.map((s) => [s, [] as Application[]]),
+  ) as Columns;
   for (const a of apps) (cols[a.stage] ?? (cols[a.stage] = [])).push(a);
   for (const s of STAGES) {
     cols[s].sort((x, y) => x.position_order - y.position_order);
@@ -61,7 +63,10 @@ export function KanbanBoard() {
 
   const setCols = (updater: Columns | ((prev: Columns) => Columns)) =>
     setColumns((prev) => {
-      const next = typeof updater === 'function' ? (updater as (p: Columns) => Columns)(prev) : updater;
+      const next =
+        typeof updater === "function"
+          ? (updater as (p: Columns) => Columns)(prev)
+          : updater;
       columnsRef.current = next;
       return next;
     });
@@ -74,12 +79,15 @@ export function KanbanBoard() {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
   );
 
   function stageOf(id: string): Stage | null {
-    if (id.startsWith('col:')) return id.slice(4) as Stage;
-    for (const s of STAGES) if (columnsRef.current[s].some((a) => a.id === id)) return s;
+    if (id.startsWith("col:")) return id.slice(4) as Stage;
+    for (const s of STAGES)
+      if (columnsRef.current[s].some((a) => a.id === id)) return s;
     return null;
   }
 
@@ -119,7 +127,7 @@ export function KanbanBoard() {
     setCols((prev) => {
       const list = prev[to];
       const oldIndex = list.findIndex((a) => a.id === active.id);
-      const overIndex = String(over.id).startsWith('col:')
+      const overIndex = String(over.id).startsWith("col:")
         ? list.length - 1
         : list.findIndex((a) => a.id === over.id);
       if (oldIndex >= 0 && overIndex >= 0 && oldIndex !== overIndex) {
@@ -136,17 +144,26 @@ export function KanbanBoard() {
     const original = data?.find((a) => a.id === active.id);
     const newOrder = computeOrder(finalList, idx);
     const changed =
-      !original || original.stage !== to || original.position_order !== newOrder;
+      !original ||
+      original.stage !== to ||
+      original.position_order !== newOrder;
     if (changed) {
-      move.mutate({ id: String(active.id), stage: to, position_order: newOrder });
+      move.mutate({
+        id: String(active.id),
+        stage: to,
+        position_order: newOrder,
+      });
     }
   }
 
   if (isLoading) {
     return (
-      <div className="flex h-[calc(100dvh-12rem)] gap-3 overflow-x-auto md:grid md:grid-cols-7 md:overflow-x-hidden">
+      <div className="flex flex-col gap-3 md:grid md:h-[calc(100dvh-12rem)] md:grid-cols-7">
         {STAGES.map((s) => (
-          <div key={s} className="w-64 shrink-0 space-y-2 rounded-lg border p-2 md:w-auto">
+          <div
+            key={s}
+            className="w-full space-y-2 rounded-lg border p-2 md:w-auto"
+          >
             <Skeleton className="h-6 w-full" />
             <Skeleton className="h-20 w-full" />
             <Skeleton className="h-20 w-full" />
@@ -179,7 +196,7 @@ export function KanbanBoard() {
       onDragEnd={onDragEnd}
       onDragCancel={() => setActiveId(null)}
     >
-      <div className="flex h-[calc(100dvh-12rem)] gap-3 overflow-x-auto pb-1 snap-x snap-mandatory md:grid md:grid-cols-7 md:snap-none md:overflow-x-hidden">
+      <div className="flex flex-col gap-3 md:grid md:h-[calc(100dvh-12rem)] md:grid-cols-7 md:overflow-hidden">
         {STAGES.map((stage) => (
           <KanbanColumn
             key={stage}
@@ -190,7 +207,9 @@ export function KanbanBoard() {
         ))}
       </div>
       <DragOverlay>
-        {activeCard ? <ApplicationCard application={activeCard} overlay /> : null}
+        {activeCard ? (
+          <ApplicationCard application={activeCard} overlay />
+        ) : null}
       </DragOverlay>
       <CardDetailSheet
         application={selectedCard}
