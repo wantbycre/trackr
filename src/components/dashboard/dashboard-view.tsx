@@ -85,7 +85,10 @@ export function DashboardView() {
                 />
                 <Tooltip
                   cursor={{ fill: 'var(--muted)', opacity: 0.3 }}
-                  formatter={(v: number, _n, p) => [`${v}건 (${p.payload.rate}%)`, '도달']}
+                  formatter={(value, _name, item) => [
+                    `${value}건 (${(item as { payload: { rate: number } }).payload.rate}%)`,
+                    '도달',
+                  ]}
                 />
                 <Bar dataKey="reached" radius={[0, 4, 4, 0]} fill="var(--primary)" />
               </BarChart>
@@ -106,7 +109,7 @@ export function DashboardView() {
                 <YAxis allowDecimals={false} width={28} tickLine={false} axisLine={false} fontSize={12} />
                 <Tooltip
                   cursor={{ fill: 'var(--muted)', opacity: 0.3 }}
-                  formatter={(v: number) => [`${v}건`, '지원']}
+                  formatter={(value) => [`${value}건`, '지원']}
                 />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                   {stats.distribution.map((d) => (
