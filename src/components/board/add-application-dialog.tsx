@@ -75,7 +75,18 @@ export function AddApplicationDialog() {
         <form onSubmit={onSubmit} className="space-y-3">
           <div className="grid gap-1">
             <Label className="text-xs text-muted-foreground">플랫폼 *</Label>
-            <Input required value={platform} onChange={(e) => setPlatform(e.target.value)} placeholder="원티드 / 사람인 / 직접지원 …" />
+            <Input
+              required
+              list="platform-options"
+              value={platform}
+              onChange={(e) => setPlatform(e.target.value)}
+              placeholder="선택하거나 직접 입력"
+            />
+            <datalist id="platform-options">
+              <option value="원티드" />
+              <option value="잡코리아" />
+              <option value="사람인" />
+            </datalist>
           </div>
           <div className="grid gap-1">
             <Label className="text-xs text-muted-foreground">회사이름 *</Label>

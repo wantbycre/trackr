@@ -144,9 +144,9 @@ export function KanbanBoard() {
 
   if (isLoading) {
     return (
-      <div className="flex gap-3 overflow-x-auto pb-2">
+      <div className="flex h-[calc(100dvh-12rem)] gap-3 overflow-x-auto md:grid md:grid-cols-7 md:overflow-x-hidden">
         {STAGES.map((s) => (
-          <div key={s} className="w-64 shrink-0 space-y-2 rounded-lg border p-2">
+          <div key={s} className="w-64 shrink-0 space-y-2 rounded-lg border p-2 md:w-auto">
             <Skeleton className="h-6 w-full" />
             <Skeleton className="h-20 w-full" />
             <Skeleton className="h-20 w-full" />
@@ -179,7 +179,7 @@ export function KanbanBoard() {
       onDragEnd={onDragEnd}
       onDragCancel={() => setActiveId(null)}
     >
-      <div className="flex gap-3 overflow-x-auto pb-3">
+      <div className="flex h-[calc(100dvh-12rem)] gap-3 overflow-x-auto pb-1 snap-x snap-mandatory md:grid md:grid-cols-7 md:snap-none md:overflow-x-hidden">
         {STAGES.map((stage) => (
           <KanbanColumn
             key={stage}
