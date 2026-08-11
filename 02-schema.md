@@ -20,7 +20,7 @@ _작성: 2026-08-11 · 상태: ✅ 스키마+임포트 완료 (문서 동기화�
 
 ## CSV 템플릿 (사람이 채우는 형식)
 
-파일: `seed/applications.template.csv` — Excel에서 열어 130행 채운 뒤 `seed/applications.csv`로 저장.
+파일: `seed/applications.template.csv` — 이 **한 파일**에 채운다. 실데이터가 들어가므로 `seed/*.csv` gitignore로 **로컬 전용**(공개 레포엔 미포함). 포맷은 아래 표 참조.
 
 | 컬럼     | 필수 | 허용값 / 형식                                                                      | 설명                           |
 | -------- | :--: | ---------------------------------------------------------------------------------- | ------------------------------ |
@@ -121,7 +121,7 @@ alter table application_events  disable row level security;
 
 ## 임포트 방법 (두 갈래)
 
-1. **Supabase 대시보드 Table Editor → Import CSV** (가장 간단): `seed/applications.csv` 업로드.
+1. **Supabase 대시보드 Table Editor → Import CSV** (가장 간단): `seed/applications.template.csv` 업로드.
    단, 한글 라벨→enum 변환이 안 되므로, 업로드 전 CSV를 enum 값으로 변환하거나 아래 스크립트 사용.
 2. **Node 임포트 스크립트** (`scripts/import.ts`, 추천): CSV 파싱 + 라벨→enum 매핑 + `applications` insert.
    - `applied_at` 오름차순으로 `position_order` 부여.
@@ -131,7 +131,7 @@ alter table application_events  disable row level security;
 
 - [x] Supabase 프로젝트 생성 + `.env.local` 채우기
 - [x] 스키마 SQL 실행 (SQL Editor) + RLS disable
-- [x] `seed/applications.csv` 작성 (146행)
+- [x] `seed/applications.template.csv` 작성 (146행, 로컬 전용)
 - [x] 임포트 스크립트 작성 + 실행 (146건 insert)
 - [ ] `00-overview.md`·`react.md` stage/result 모델로 갱신
 - [ ] `/board`에서 실데이터 렌더 확인 → 03-kanban 단계에서

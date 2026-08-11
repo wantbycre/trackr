@@ -141,7 +141,7 @@ async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const csvPath = resolve(
-    args.find((a) => !a.startsWith('--')) ?? 'seed/applications.csv',
+    args.find((a) => !a.startsWith('--')) ?? 'seed/applications.template.csv',
   );
 
   const raw = readFileSync(csvPath, 'utf8');
