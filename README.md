@@ -1,6 +1,10 @@
 # Trackr
 
+[![CI](https://github.com/wantbycre/trackr/actions/workflows/ci.yml/badge.svg)](https://github.com/wantbycre/trackr/actions/workflows/ci.yml)
+
 > 내가 지원한 회사들을 **칸반으로 관리**하고, 전형 단계별 **전환율·응답 소요일**을 대시보드로 보는 개인 구직 파이프라인 트래커.
+
+🔗 **라이브 데모**: https://trackr-sable.vercel.app (로그인 없이 **데모 모드**로 바로 둘러볼 수 있습니다 — 변경사항은 저장되지 않음)
 
 포트폴리오·면접 시연용으로 만든 사이드 프로젝트입니다. "열자마자 이해되는 직관적 UI" + "실데이터 130건으로 돌아가는 통계"를 목표로 합니다.
 
