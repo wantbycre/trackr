@@ -5,6 +5,16 @@ import type { Application, ApplicationEvent, Stage } from '@/lib/applications';
 let apps: Application[] = DEMO_APPLICATIONS.map((a) => ({ ...a }));
 let events: ApplicationEvent[] = DEMO_EVENTS.map((e) => ({ ...e }));
 
+type EditablePatch = Partial<
+  Pick<
+    Application,
+    'platform' | 'company_name' | 'position' | 'stage' | 'round' | 'result' | 'applied_at' | 'job_url' | 'notes'
+  >
+>;
+
+export type CreateInput = Pick<Application, 'platform' | 'company_name' | 'position'> &
+  Partial<Pick<Application, 'stage' | 'round' | 'result' | 'applied_at' | 'job_url' | 'notes'>>;
+
 export const demoStore = {
   listApplications(): Application[] {
     return apps.map((a) => ({ ...a }));
@@ -17,21 +27,40 @@ export const demoStore = {
       .map((e) => ({ ...e }));
   },
 
+  create(input: CreateInput) {
+    const iso = new Date().toISOString();
+    apps = [
+      ...apps,
+      {
+        id: `demo-${Date.now()}`,
+        platform: input.platform,
+        company_name: input.company_name,
+        position: input.position,
+        stage: input.stage ?? 'applied',
+        round: input.round ?? null,
+        result: input.result ?? 'pending',
+        applied_at: input.applied_at ?? null,
+        job_url: input.job_url ?? null,
+        notes: input.notes ?? null,
+        position_order: Date.now(),
+        created_at: iso,
+        updated_at: iso,
+      },
+    ];
+  },
+
+  remove(id: string) {
+    apps = apps.filter((a) => a.id !== id);
+    events = events.filter((e) => e.application_id !== id);
+  },
+
   move(id: string, stage: Stage, position_order: number) {
     apps = apps.map((a) =>
       a.id === id ? { ...a, stage, position_order, updated_at: new Date().toISOString() } : a,
     );
   },
 
-  update(
-    id: string,
-    patch: Partial<
-      Pick<
-        Application,
-        'platform' | 'company_name' | 'position' | 'stage' | 'round' | 'result' | 'applied_at' | 'job_url' | 'notes'
-      >
-    >,
-  ) {
+  update(id: string, patch: EditablePatch) {
     const before = apps.find((a) => a.id === id);
     apps = apps.map((a) =>
       a.id === id ? { ...a, ...patch, updated_at: new Date().toISOString() } : a,

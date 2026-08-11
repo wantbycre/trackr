@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { useApplicationEvents, useUpdateApplication } from '@/hooks/use-applications';
+import { useApplicationEvents, useUpdateApplication, useDeleteApplication } from '@/hooks/use-applications';
 import {
   RESULT_META,
   STAGES,
@@ -70,6 +70,7 @@ function DetailBody({
   onClose: () => void;
 }) {
   const update = useUpdateApplication();
+  const del = useDeleteApplication();
   const { data: events, isLoading: eventsLoading } = useApplicationEvents(application.id);
 
   const [form, setForm] = useState<FormState>(() => ({
@@ -205,9 +206,28 @@ function DetailBody({
       </div>
 
       <SheetFooter>
-        <Button onClick={onSave} disabled={update.isPending}>
-          {update.isPending ? '저장 중…' : '저장'}
-        </Button>
+        <div className="flex w-full items-center justify-between gap-2">
+          <Button
+            variant="ghost"
+            className="text-destructive hover:text-destructive"
+            disabled={del.isPending}
+            onClick={() => {
+              if (!confirm(`"${application.company_name}" 지원을 삭제할까요?`)) return;
+              del.mutate(application.id, {
+                onSuccess: () => {
+                  toast.success('삭제했습니다');
+                  onClose();
+                },
+                onError: (e) => toast.error(`삭제 실패: ${(e as Error).message}`),
+              });
+            }}
+          >
+            삭제
+          </Button>
+          <Button onClick={onSave} disabled={update.isPending}>
+            {update.isPending ? '저장 중…' : '저장'}
+          </Button>
+        </div>
       </SheetFooter>
     </>
   );
