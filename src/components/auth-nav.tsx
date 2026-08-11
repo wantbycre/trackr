@@ -15,9 +15,7 @@ export function AuthNav() {
 
   if (!session) {
     return (
-      <Button asChild variant="outline" size="sm">
-        <Link href="/login">로그인</Link>
-      </Button>
+      <Button variant="outline" size="sm" render={<Link href="/login">로그인</Link>} />
     );
   }
 
